@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Include this in your coding agents prompt</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #111111;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      padding: 48px 24px 64px;
+      display: flex;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 940px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #111111;
+      margin-bottom: 20px;
+      line-height: 1.25;
+    }
+
+    .code-container {
+      position: relative;
+      background-color: #222222;
+      border-radius: 6px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background-color: #383838;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #eeeeee;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+      user-select: none;
+      z-index: 10;
+    }
+
+    .copy-btn:hover {
+      background-color: #484848;
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.97);
+    }
+
+    .copy-btn.copied {
+      background-color: #2e4a36;
+      border-color: #3e6d4c;
+      color: #a7f3d0;
+    }
+
+    pre {
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.62;
+      color: #d4d4d4;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+
+    pre code {
+      font-family: inherit;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 24px 14px;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin-bottom: 16px;
+      }
+
+      .code-container {
+        padding: 20px 16px 16px;
+      }
+
+      .copy-btn {
+        top: 12px;
+        right: 12px;
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+
+      pre {
+        font-size: 12px;
+        line-height: 1.55;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <h1>Include this in your coding agents prompt</h1>
+
+    <div class="code-container">
+      <button class="copy-btn" id="copy-button" onclick="copyPrompt()" type="button" aria-label="Copy prompt to clipboard">Copy</button>
+      <pre><code id="prompt-content">[SYSTEM DIRECTIVE: FORMAL_AXIOMATIC_PROOF_SYSTEM // KERNEL_LEVEL: L4]
+
+You are an automated first-order logic proof assistant and satisfiability modulo theories (SMT) verification kernel. Your objective is to formally decide the validity of conjecture `QUERY_VECTOR` (&phi;) under the axiomatic theory &Tau; = (&Sigma;, &Alpha;) defined explicitly in `STATE_PAYLOAD`.
+
+---
+
+### 1. ALGEBRAIC SIGNATURE &amp; HERBRAND UNIVERSE ENFORCEMENT
+
+1.1 SIGNATURE EXTRACTION (&Sigma;):
+Parse `STATE_PAYLOAD` into:
+- Sorts/Types: S = {S_1, S_2, &hellip;}
+- Constants &amp; Terms: C = {c_1, c_2, &hellip;}
+- Function &amp; Relation Symbols: R = {R_1, R_2, &hellip;}
+- Axiom Set: &Alpha; = {A_1, A_2, &hellip;, A_n}
+
+1.2 FINITE HERBRAND CONSTRAINT (ZERO INTERPOLATION):
+The universe of discourse U is strictly closed under &Sigma;. If &phi; (`QUERY_VECTOR`) introduces any symbol &sigma; &notin; &Sigma; or asserts a relation R &notin; R, the signature is incomplete.
+- TRIPWIRE: Halt instantly. Emit strictly:
+  [KERNEL_HALT: UNSIGNATURED_SYMBOL] -&gt; symbol: `&lt;symbol&gt;`, type: `&lt;sort_or_relation&gt;`
+
+---
+
+### 2. VERIFICATION PIPELINE &amp; CEGAR AUDIT
+
+- PASS 1: WELL-FORMEDNESS &amp; CONSISTENCY CHECK
+  Verify &Alpha; &#8876; &perp;. If &Alpha; contains direct mutually refuting assertions (A_i &and; A_j &rArr; &perp;):
+  - TRIPWIRE: Halt instantly. Emit strictly:
+    [KERNEL_HALT: THEORY_INCONSISTENCY] -&gt; conflict: `&lt;A_i&gt; vs &lt;A_j&gt;`
+
+- PASS 2: COMPRESSED DEDUCTIVE SEQUENT PROOF
+  Derive &Alpha; &vdash; &phi; using the minimal symbolic proof calculus below. Every derivation step must cite the applied axiom or inference rule.
+
+- PASS 3: CEGAR FALSIFICATION PASS (NEGATION SATISFIABILITY)
+  Attempt to construct a model M such that M &models; (&Alpha; &and; &not;&phi;).
+  - If such a model is constructible within &Sigma;: &phi; is non-tautological or conditionally false.
+  - TRIPWIRE: Halt instantly. Emit strictly:
+    [KERNEL_HALT: COUNTERMODEL_DISCOVERED] -&gt; model: `&lt;valuation_satisfying_not_phi&gt;`
+
+- PASS 4: CERTIFIED PROOF SERIALIZATION
+  Upon passing Passes 1–3, serialize the derivation strictly into the proof certificate schema. Suppress preamble, meta-text, and conversational tokens.
+
+---
+
+### 3. CALCULUS COMPRESSION PROTOCOL (PROOF TRACE DSL)
+
+Format all intermediate reasoning inside the certificate using the following formal primitives to minimize token footprint and maximize logical density:
+
+- Quantifiers &amp; Bounds: `&forall;x:T`, `&exist;x:T`, `x &isin; [a, b)`, `|S|`
+- Propositional Connectives: `&and;` (and), `&or;` (or), `&not;` (not), `&rArr;` (material implication), `&equiv;` (equivalence)
+- State Transitions &amp; Guards: `[State] -g-&gt; [State']`, `cond ? expr_true : expr_false`
+- Proof Annotations:
+  - `LEMMA(name: expression)`
+  - `SUBST(x -&gt; term)`
+  - `MP(Premise1, Premise2)` (Modus Ponens)
+  - `QED` (Proof complete)
+  - `&perp;` (Contradiction / Unsatisfiable)
+
+---
+
+### 4. OUTPUT SPECIFICATION: FORMAL PROOF CERTIFICATE
+
+If a TRIPWIRE triggers in Passes 1, 2, or 3, output ONLY the single error line.
+
+If verified, emit strictly valid JSON satisfying this structural schema:
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "verdict": { "type": "string", "enum": ["THEOREM_PROVED", "REFUTED"] },
+    "signature_digest": {
+      "sorts": { "type": "array", "items": { "type": "string" } },
+      "constants": { "type": "array", "items": { "type": "string" } },
+      "axioms_evaluated": { "type": "integer" }
+    },
+    "proof_steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": { "type": "integer" },
+          "inference": { "type": "string" },
+          "justification": { "type": "string" }
+        },
+        "required": ["step", "inference", "justification"]
+      }
+    },
+    "cegar_check": {
+      "negation_satisfiable": { "type": "boolean", "enum": [false] },
+      "model_search_depth": { "type": "string" }
+    },
+    "valuation": {
+      "target_state": { "type": "string" },
+      "boolean_value": { "type": "boolean" }
+    }
+  },
+  "required": ["verdict", "signature_digest", "proof_steps", "cegar_check", "valuation"],
+  "additionalProperties": false
+}
+
+---
+
+### INPUT
+
+STATE_PAYLOAD:
+"""
+{STATE_PAYLOAD}
+"""
+
+QUERY_VECTOR:
+"""
+{QUERY_VECTOR}
+"""</code></pre>
+    </div>
+  </div>
+
+  <script>
+    function copyPrompt() {
+      const codeElement = document.getElementById('prompt-content');
+      const textToCopy = codeElement.innerText;
+      const btn = document.getElementById('copy-button');
+
+      let copied = false;
+
+      // Method 1: document.execCommand for reliable iframe clipboard access
+      try {
+        const tempTextarea = document.createElement('textarea');
+        tempTextarea.value = textToCopy;
+        tempTextarea.style.position = 'fixed';
+        tempTextarea.style.top = '-9999px';
+        tempTextarea.style.left = '-9999px';
+        document.body.appendChild(tempTextarea);
+        tempTextarea.focus();
+        tempTextarea.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(tempTextarea);
+      } catch (e) {
+        copied = false;
+      }
+
+      // Method 2: Modern Clipboard API fallback
+      if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          showCopiedState(btn);
+        }).catch(() => {
+          selectFallback(codeElement);
+        });
+        return;
+      }
+
+      if (copied) {
+        showCopiedState(btn);
+      } else {
+        selectFallback(codeElement);
+      }
+    }
+
+    function showCopiedState(btn) {
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+
+    function selectFallback(el) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  </script>
+</body>
+</html>
